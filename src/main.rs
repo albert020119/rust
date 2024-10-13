@@ -1,4 +1,5 @@
-use clap::Parser; 
+use clap::Parser;
+use std::io::Read;  
 
 
 #[derive(Parser)]
@@ -7,7 +8,16 @@ struct CliArgs{
     key: String,
 }
 
-fn xor_file(fd: std::fs::File, key: String){
+fn xor_file (mut fd: std::fs::File, metad: std::fs::Metadata, key: String) -> Result<bool, String>{
+    let mut buf = vec![0; metad.len().try_into().unwrap()];
+
+    let _ = fd.read_exact(&mut buf);
+
+    let mut dst: Vec<&[u8]> = buf.chunks(key.len()).collect();
+    for i in dst.iter_mut(){
+        println!("{:?}", i); 
+    }
+    return Ok(true);
 }
 
 fn main() {
@@ -38,8 +48,17 @@ fn main() {
         }
     };
 
+    println!("xoring {size} bytes of data...\n",
+        size=metad.len()
+    );
 
-    let result = xor_file(f, args.key);
+    let result = match xor_file(f, metad, args.key){
+        Ok(_) => {println!("successfully xored files")},
+        Err(err) => {
+            println!("could not obtain metadata for file");
+            std::process::exit(1);
+        }
+    };
     
 
 }
