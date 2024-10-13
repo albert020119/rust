@@ -1,23 +1,21 @@
 use clap::Parser;
-use std::io::Read;  
+use std::io::Read;
+use std::io::Write;   
 
 
 #[derive(Parser)]
 struct CliArgs{
     path: std::path::PathBuf,
     key: String,
+    out_path: std::path::PathBuf
 }
 
-fn xor_file (mut fd: std::fs::File, metad: std::fs::Metadata, key: String) -> Result<bool, String>{
+fn xor_file (mut fd: std::fs::File, metad: std::fs::Metadata, key: String) -> Result<Vec<u8>, String>{
     let mut buf = vec![0; metad.len().try_into().unwrap()];
 
     let _ = fd.read_exact(&mut buf);
 
     let mut dst: Vec<_> = buf.chunks_mut(key.len()).collect();
-    for i in dst.iter_mut(){
-        println!("{:?}", i); 
-    }
-
     for mut chunk in dst.iter_mut(){
         let key_iter = key.as_bytes().iter(); 
         for (pos, key_val) in key_iter.enumerate(){
@@ -27,11 +25,8 @@ fn xor_file (mut fd: std::fs::File, metad: std::fs::Metadata, key: String) -> Re
             chunk[pos] = chunk[pos] ^ key_val;
         }
     }
-    let mut dst: Vec<&[u8]> = buf.chunks(key.len()).collect();
-    for i in dst.iter_mut(){
-        println!("{:?}", i); 
-    }
-    return Ok(true);
+
+    return Ok(buf);
 }
 
 fn main() {
@@ -62,17 +57,21 @@ fn main() {
         }
     };
 
-    println!("xoring {size} bytes of data...\n",
-        size=metad.len()
-    );
+    println!("xoring {size} bytes of data...", size=metad.len());
 
     let result = match xor_file(f, metad, args.key){
-        Ok(_) => {println!("successfully xored files")},
+        Ok(buf) => {
+            println!("successfully xored file contents");
+            buf
+        },
         Err(err) => {
             println!("could not obtain metadata for file");
             std::process::exit(1);
         }
     };
-    
 
+    println!("writing results to output file {}", args.out_path.display()); 
+    
+    let mut f = std::fs::File::create(args.out_path).expect("Unable to create file");
+    f.write_all(&result).expect("Unable to write data");
 }
