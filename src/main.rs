@@ -13,6 +13,20 @@ fn xor_file (mut fd: std::fs::File, metad: std::fs::Metadata, key: String) -> Re
 
     let _ = fd.read_exact(&mut buf);
 
+    let mut dst: Vec<_> = buf.chunks_mut(key.len()).collect();
+    for i in dst.iter_mut(){
+        println!("{:?}", i); 
+    }
+
+    for mut chunk in dst.iter_mut(){
+        let key_iter = key.as_bytes().iter(); 
+        for (pos, key_val) in key_iter.enumerate(){
+            if pos >= chunk.len() {
+                break;
+            }
+            chunk[pos] = chunk[pos] ^ key_val;
+        }
+    }
     let mut dst: Vec<&[u8]> = buf.chunks(key.len()).collect();
     for i in dst.iter_mut(){
         println!("{:?}", i); 
