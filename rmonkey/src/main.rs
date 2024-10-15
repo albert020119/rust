@@ -1,8 +1,15 @@
 use std::io;
 use std::io::Write;
+use std::mem;
+
+use strum::IntoEnumIterator; // 0.17.1
+use strum_macros::EnumIter; // 0.17.1
+
 use crossterm::event::{
     poll, KeyboardEnhancementFlags, PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
 };
+use crossterm::terminal;
+use crossterm::style::Stylize; 
 use crossterm::{
     cursor::{
         MoveDown, MoveUp, MoveLeft, MoveRight, DisableBlinking, Hide
@@ -19,12 +26,6 @@ use crossterm::{
 
 use std::time::Duration;
 
-const HELP: &str = r#"Blocking read()
- - Keyboard, mouse, focus and terminal resize events enabled
- - Hit "c" to print current cursor position
- - Use Esc to quit
-"#;
-
 fn listen_for_keys() -> io::Result<()> {
     loop {
         // Blocking read
@@ -35,7 +36,7 @@ fn listen_for_keys() -> io::Result<()> {
                     KeyCode::Char(ch) => ch,
                     _ => '\0',
                 };
-                if (kev.kind != KeyEventKind::Release){
+                if kev.kind != KeyEventKind::Release{
                     print!("{}", c);
                     io::stdout().flush().unwrap();
                 }
@@ -51,7 +52,7 @@ fn listen_for_keys() -> io::Result<()> {
     Ok(())
 }
 
-#[non_exhaustive]
+#[derive(Debug, EnumIter, PartialEq)]
 enum PossibleOptions{
     Exit,
     Start,
@@ -59,28 +60,104 @@ enum PossibleOptions{
     TimeRun60
 }
 
+impl PossibleOptions{
+    fn get_string(&self) -> String{
+        match &self{
+            PossibleOptions::Exit => String::from("Press ESC to exit\n"),
+            PossibleOptions::Start => String::from("start game\n"),
+            PossibleOptions::TimeRun30 => String::from("time run 30s\n"),
+            PossibleOptions::TimeRun60 => String::from("time run 60s\n")
+        }
+    }
+
+    fn get_all() -> Vec<String>{
+        let mut strings = vec![]; 
+        for op in PossibleOptions::iter(){
+            strings.push(op.get_string())
+        }
+        return strings;
+    }
+
+    fn count() -> u8{
+        let mut count: u8 = 0; 
+        for op in PossibleOptions::iter(){
+            count += 1; 
+        }
+        return count; 
+
+    }
+
+}
+
 struct Menu{
     pub selected_option: PossibleOptions,    
 } 
 
 impl Menu {
-    fn print(){
+    fn print_initial(&self){
+        let options: Vec<String> = PossibleOptions::get_all();
+        for option in options{
+            print!("{}", option);
+        }
+        io::stdout().execute(
+            MoveUp(PossibleOptions::count().into())
+        );
+        
     }
 
-    fn go_up(){
+    fn refresh(&self){
+        io::stdout().execute(terminal::Clear(terminal::ClearType::All));
+
+        for option in PossibleOptions::iter(){
+            if option == self.selected_option {
+                print!(">{}", option.get_string().green())
+            } else{ 
+                print!("{}", option.get_string())
+            }
+        }
     }
 
-    fn go_down(){
+    fn go_up(&mut self){
+        let mut previous: PossibleOptions = PossibleOptions::TimeRun60; 
+        for op in PossibleOptions::iter(){
+            if op == self.selected_option {
+                self.selected_option = previous;
+                break;  
+            }
+            previous = op; 
+        }
+        self.refresh(); 
+    }
+
+    fn go_down(&mut self){
+        let mut next: bool = false;
+        for op in PossibleOptions::iter(){
+            if next {
+                self.selected_option = op;
+                next = false; 
+                break;  
+            }
+            if op == self.selected_option {
+                next = true; 
+            }
+        };
+        if next{
+            for op in PossibleOptions::iter(){
+                self.selected_option = op;
+                break;
+            };
+        }
+        self.refresh(); 
     }
 }
 
 fn select_option() -> PossibleOptions{
-    println!("Press ESC to exit \n\nstart game \ntime run 30s\ntime run 60s");
     let mut exit = false; 
     let mut selection = PossibleOptions::Start;
     let mut menu = Menu{
         selected_option: selection
     };
+    menu.print_initial();
     loop {
         let mut ev = read();
         
@@ -103,21 +180,19 @@ fn select_option() -> PossibleOptions{
                 io::stdout().execute(
                     MoveUp(1)
                 );
+                menu.go_up();
             },
             KeyCode::Down => {
                 io::stdout().execute(
                     MoveDown(1)
                 );
+                menu.go_down();
             },
             KeyCode::Enter => {
                 break
             },
             _ => {}
         }
-    }
-
-    if exit {
-        std::process::exit(0);
     }
 
     menu.selected_option
@@ -128,13 +203,14 @@ fn main() -> io::Result<()> {
     io::stdout().execute(
         DisableBlinking
     ); 
-    println!("{}", HELP);
 
     enable_raw_mode()?;
 
     let mut stdout = io::stdout();
 
-    match select_option(){
+    let option = select_option();
+    match option{
+        PossibleOptions::Exit => std::process::exit(0),
         _ => {}      
     };
 
