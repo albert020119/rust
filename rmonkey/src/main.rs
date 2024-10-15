@@ -51,18 +51,36 @@ fn listen_for_keys() -> io::Result<()> {
     Ok(())
 }
 
-enum MenuSelection{
+#[non_exhaustive]
+enum PossibleOptions{
     Exit,
     Start,
     TimeRun30,
     TimeRun60
-
 }
 
-fn select_option() -> MenuSelection{
+struct Menu{
+    pub selected_option: PossibleOptions,    
+} 
+
+impl Menu {
+    fn print(){
+    }
+
+    fn go_up(){
+    }
+
+    fn go_down(){
+    }
+}
+
+fn select_option() -> PossibleOptions{
     println!("Press ESC to exit \n\nstart game \ntime run 30s\ntime run 60s");
-    let mut exit = false;
-    let mut selection = MenuSelection::Start;
+    let mut exit = false; 
+    let mut selection = PossibleOptions::Start;
+    let mut menu = Menu{
+        selected_option: selection
+    };
     loop {
         let mut ev = read();
         
@@ -102,7 +120,7 @@ fn select_option() -> MenuSelection{
         std::process::exit(0);
     }
 
-    selection
+    menu.selected_option
 }
 
 
@@ -116,8 +134,7 @@ fn main() -> io::Result<()> {
 
     let mut stdout = io::stdout();
 
-    match select_option() {
-        MenuSelection::Start => {println!("starting")},
+    match select_option(){
         _ => {}      
     };
 
