@@ -9,4 +9,4 @@ edition = "2021"
 crossterm = "*"
 strum = "0.26"
 strum_macros = "0.26"
-reqwest = { features = ["blocking"] }
+reqwest = { features = ["blocking"], version = "*"}
