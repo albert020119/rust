@@ -7,13 +7,15 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 
-
+mod text_generator; 
 mod options;
 use options::options::PossibleOptions as PossibleOptions;
 mod option_menu;
-use option_menu::menu::select_option as select_option; 
-mod text_generator;
-use text_generator::text_gen::get_text as get_text;  
+use option_menu::menu::select_option as select_option;
+use option_menu::menu::clean_up as clean_up;
+mod game_session; 
+use game_session::game_session::GameSession as GameSession; 
+mod normal_game;   
 
 fn main() -> io::Result<()> {
     let _ = io::stdout().execute(
@@ -21,15 +23,20 @@ fn main() -> io::Result<()> {
     ); 
 
     enable_raw_mode()?;
-
-    let option = select_option();
-    match option{
-        PossibleOptions::Exit => std::process::exit(0),
-        PossibleOptions::Start => {
-            println!("{:?}",get_text().unwrap());
-        },
-        _ => todo!(),       
-    };
-
+    loop{
+        let option = select_option();
+        match option{
+            PossibleOptions::Exit => {
+                clean_up(); 
+                break;
+            },
+            PossibleOptions::Start => {
+                let session = GameSession::new(PossibleOptions::Start);
+                session.init();
+                session.start(); 
+            },
+            _ => todo!(),       
+        };
+    }
     disable_raw_mode()
 }

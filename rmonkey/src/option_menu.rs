@@ -121,4 +121,8 @@ pub mod menu{
     
         menu.selected_option
     }
+
+    pub fn clean_up(){   
+        let _ = io::stdout().execute(terminal::Clear(terminal::ClearType::All));
+    }
 }
