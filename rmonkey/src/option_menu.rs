@@ -8,7 +8,7 @@ pub mod menu{
     use crossterm::style::Stylize; 
     use crossterm::{
         cursor::{
-            MoveDown, MoveUp
+            MoveDown, MoveUp, MoveTo
         },
         event::{
             read, Event, KeyCode, KeyEventKind
@@ -21,6 +21,10 @@ pub mod menu{
     
     impl Menu {
         fn print_initial(&self){
+            let _ = io::stdout().execute(terminal::Clear(terminal::ClearType::All));
+            let _ = io::stdout().execute(
+                MoveTo(0, 0)
+            );
             let options: Vec<String> = PossibleOptions::get_all();
             for option in options{
                 print!("{}", option);
@@ -33,6 +37,9 @@ pub mod menu{
     
         fn refresh(&self){
             let _ = io::stdout().execute(terminal::Clear(terminal::ClearType::All));
+            let _ = io::stdout().execute(
+                MoveTo(0, 0)
+            );
     
             for option in PossibleOptions::iter(){
                 if option == self.selected_option {
