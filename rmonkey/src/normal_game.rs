@@ -75,6 +75,7 @@ pub mod game{
 
                         if index == char_vector.len(){
                             println!("\nCongrats!\nPress ESC to return to the menu");
+                            break; 
                         }
                     },
                     KeyCode::Backspace => {
@@ -84,6 +85,25 @@ pub mod game{
                          );
                         index-=1; 
                     },
+                    KeyCode::Esc => {
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+            loop{
+                let ev = read();
+                    
+                let code = match ev {
+                    Ok(Event::Key(key_event)) => {
+                        if key_event.kind == KeyEventKind::Release {
+                            continue
+                        }
+                        key_event.code
+                    },
+                    _ => continue,
+                };
+                match code{
                     KeyCode::Esc => {
                         break;
                     }
