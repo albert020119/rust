@@ -2,11 +2,12 @@ pub mod game{
     use crate::text_generator::text_gen::get_text as get_text;
     use std::io; 
     use std::io::Write; 
+    use crossterm::style::Stylize;
     use crossterm::terminal; 
     use crossterm::terminal::ClearType; 
     use crossterm::{
         cursor::{
-            MoveDown, MoveUp, MoveToPreviousLine, RestorePosition, SavePosition, MoveTo
+            MoveDown, MoveUp, MoveToPreviousLine, RestorePosition, SavePosition, MoveTo, position 
         },
         event::{
             read, Event, KeyCode, KeyEventKind
@@ -21,7 +22,7 @@ pub mod game{
         pub fn start(){
             let _ = io::stdout().execute(terminal::Clear(terminal::ClearType::All));
             let mut test_string: String = get_text().unwrap();
-
+            
             let _ = io::stdout().execute(
                 MoveTo(0, 0)
             );
@@ -36,6 +37,11 @@ pub mod game{
             let _ = io::stdout().execute(
                 RestorePosition
              );
+
+            let char_vector: Vec<char> = test_string.chars().collect();
+            let mut position_stack: Vec<(u16, u16)> = Vec::new();
+            position_stack.push(position().unwrap());
+            let mut index: usize = 0; 
             loop {
                 let ev = read();
                 
@@ -48,27 +54,44 @@ pub mod game{
                     },
                     _ => continue,
                 };
-                
+
                 match code{
                     KeyCode::Esc => { 
                         break;
                     },
-                    KeyCode::Up => {
-                        let _ = io::stdout().execute(
-                            MoveUp(1)
-                        );
-                    },
-                    KeyCode::Down => {
-                        let _ = io::stdout().execute(
-                            MoveDown(1)
-                        );
-                    },
                     KeyCode::Enter => {
                         break 
                     },
+                    KeyCode::Char(ch) => {
+                        position_stack.push(position().unwrap());
+                        if ch == char_vector[index] {
+                            print!("{}", ch.green());
+                            io::stdout().flush().unwrap();
+                        }  else {
+                            print!("{}", char_vector[index].red());
+                            io::stdout().flush().unwrap();
+                        } 
+                        index += 1;
+
+                        if index == char_vector.len(){
+                            println!("\nCongrats!\nPress ESC to return to the menu");
+                        }
+                    },
+                    KeyCode::Backspace => {
+                        let (x, y)= position_stack.pop().unwrap();
+                        let _ = io::stdout().execute(
+                            MoveTo(x, y)
+                         );
+                        index-=1; 
+                    },
+                    KeyCode::Esc => {
+                        break;
+                    }
                     _ => {}
                 }
             }
         }
+
+        
     }
 }
