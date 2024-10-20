@@ -1,5 +1,6 @@
 pub mod game{
     use crate::text_generator::text_gen::get_text as get_text;
+    use crate::wpm_counter::wpm_counter::WpmCounter as WpmCounter;
     use std::io; 
     use std::io::Write; 
     use crossterm::style::Stylize;
@@ -39,11 +40,22 @@ pub mod game{
              );
 
             let char_vector: Vec<char> = test_string.chars().collect();
+
             let mut position_stack: Vec<(u16, u16)> = Vec::new();
             position_stack.push(position().unwrap());
+
             let mut index: usize = 0; 
+            
+            let mut first: bool = true;
+            let mut counter = WpmCounter::new(); 
             loop {
+
                 let ev = read();
+
+                if first {
+                    counter.start();
+                    first = false; 
+                } 
                 
                 let code = match ev {
                     Ok(Event::Key(key_event)) => {
@@ -54,6 +66,8 @@ pub mod game{
                     },
                     _ => continue,
                 };
+
+                counter.typed(); 
 
                 match code{
                     KeyCode::Esc => { 
@@ -90,6 +104,8 @@ pub mod game{
                     }
                     _ => {}
                 }
+
+                counter.refresh(); 
             }
             loop{
                 let ev = read();
