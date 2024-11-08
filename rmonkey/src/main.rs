@@ -42,6 +42,16 @@ fn main() -> io::Result<()> {
                 session.init();
                 session.start(); 
             },
+            PossibleOptions::TimeRun30 => {
+                let session = GameSession::new(PossibleOptions::TimeRun30);
+                session.init();
+                session.start();
+            },
+            PossibleOptions::TimeRun60 => {
+                let session = GameSession::new(PossibleOptions::TimeRun60);
+                session.init();
+                session.start();
+            }
             _ => todo!(),       
         };
     }

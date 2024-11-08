@@ -20,7 +20,7 @@ pub mod game{
     }
 
     impl Game{
-        pub fn start(){
+        pub fn start(time_limit: i64){
             let _ = io::stdout().execute(terminal::Clear(terminal::ClearType::All));
             let mut test_string: String = get_text().unwrap();
             
@@ -47,7 +47,7 @@ pub mod game{
             let mut index: usize = 0; 
             
             let mut first: bool = true;
-            let mut counter = WpmCounter::new(); 
+            let mut counter = WpmCounter::new(time_limit.try_into().unwrap()); 
             loop {
 
                 let ev = read();
@@ -68,7 +68,7 @@ pub mod game{
                 };
 
                 counter.typed(); 
-
+                counter.refresh();
                 match code{
                     KeyCode::Esc => { 
                         break;
@@ -87,7 +87,7 @@ pub mod game{
                         } 
                         index += 1;
 
-                        if index == char_vector.len(){
+                        if (index == char_vector.len()) | counter.is_finished(){
                             println!("\nCongrats!\nPress ESC to return to the menu");
                             break; 
                         }
@@ -105,7 +105,6 @@ pub mod game{
                     _ => {}
                 }
 
-                counter.refresh(); 
             }
             loop{
                 let ev = read();

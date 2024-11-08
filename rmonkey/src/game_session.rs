@@ -7,7 +7,9 @@ pub mod game_session{
     use crate::normal_game::game::Game;
 
     enum GameType{
-        NormalGame
+        NormalGame,
+        TimeRun30,
+        TimeRun60
     }
 
     pub struct GameSession{
@@ -18,7 +20,9 @@ pub mod game_session{
         pub fn new(possible_option: PossibleOptions) -> Self{
             let game_type = match possible_option {
                 PossibleOptions::Start => GameType::NormalGame, 
-                _ => todo!(),
+                PossibleOptions::TimeRun30 => GameType::TimeRun30,
+                PossibleOptions::TimeRun60 => GameType::TimeRun60,
+                PossibleOptions::Exit => todo!()
             };
             GameSession{
                 game_type: game_type
@@ -32,8 +36,9 @@ pub mod game_session{
 
         pub fn start(&self){
             match self.game_type {
-                GameType::NormalGame => Game::start(),
-                _ => todo!(),
+                GameType::NormalGame => Game::start(0),
+                GameType::TimeRun30 => Game::start(30),
+                GameType::TimeRun60 => Game::start(60)
             }
         }
 
