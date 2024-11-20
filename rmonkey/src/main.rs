@@ -52,7 +52,6 @@ fn main() -> io::Result<()> {
                 session.init();
                 session.start();
             }
-            _ => todo!(),       
         };
     }
     disable_raw_mode()
